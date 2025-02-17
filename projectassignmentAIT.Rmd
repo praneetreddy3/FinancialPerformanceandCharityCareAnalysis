@@ -1,0 +1,279 @@
+---
+title: "Rcode"
+author: "Sai Praneet Reddy Chinthala"
+date: "2024-12-09"
+output: word_document
+---
+```{r}
+# Load required libraries
+library(ggplot2)
+library(dplyr)
+library(corrplot)
+```
+
+```{r}
+# Load the dataset
+file_path <- "C:/Users/HP/Downloads/CleanedDatasetcostreport.csv"
+data <- read.csv(file_path)
+#summary of the data
+summary(data)
+```
+
+```{r}
+#nominal data
+ggplot(data, aes(x = "", y = as.numeric(Provider.CCN))) +
+  geom_boxplot(fill = "steelblue", color = "black", outlier.color = "red", outlier.size = 2) +
+  labs(
+    title = "Distribution of Provider CCN Frequencies",
+    x = "",
+    y = "Provider CCN"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    axis.title = element_text(size = 14)
+  )
+```
+
+
+
+
+
+```{r}
+## Ordinal Data: "CCN Facility Type" (Ordinal)
+# Frequency table and ordered bar plot
+facility_type_table <- table(data$CCN.Facility.Type)
+ggplot(data, aes(x = factor(CCN.Facility.Type, levels = unique(data$CCN.Facility.Type)))) +
+  geom_bar(fill = "red", color = "gray", alpha = 0.7) +
+  labs(title = "CCN Facility Type Distribution", x = "CCN Facility Type", y = "Frequency") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 10, face = "bold"),
+        axis.title = element_text(size = 12),
+        plot.title = element_text(size = 14, face = "bold")) +
+  theme_minimal(base_size = 14)
+
+```
+
+```{r}
+## Interval Data: "Total Days Title XVIII" (Interval)
+# Histogram and Boxplot
+ggplot(data, aes(x = Total.Days.Title.XVIII)) +
+  geom_histogram(binwidth = 100, fill = "black", color = "darkblue", alpha = 0.7) +
+  labs(title = "Distribution of Total Days Title XVIII", x = "Total Days Title XVIII", y = "Frequency") +
+  theme(axis.text.x = element_text(size = 10, face = "bold"),
+        axis.title = element_text(size = 12),
+        plot.title = element_text(size = 14, face = "bold"))
+```
+
+```{r}
+#ratio
+ggplot(data, aes(y = Total.Days.Title.XVIII)) +
+  geom_boxplot(fill = "darkblue", color = "black") +
+  labs(title = "Boxplot of Total Days Title XVIII", y = "Total Days Title XVIII") +
+  theme(axis.text.y = element_text(size = 10, face = "bold"),
+        axis.title = element_text(size = 12),
+        plot.title = element_text(size = 14, face = "bold"))
+```
+
+```{r}
+## Ratio Data: "Total Costs" (Ratio)
+# Histogram and Boxplot
+ggplot(data, aes(x = Total.Costs)) +
+  geom_histogram(binwidth = 50000, fill = "darkgreen", color = "black", alpha = 0.7) +
+  labs(title = "Distribution of Total Costs", x = "Total Costs", y = "Frequency") +
+  theme(axis.text.x = element_text(size = 10, face = "bold"),
+        axis.title = element_text(size = 12),
+        plot.title = element_text(size = 14, face = "bold"))
+```
+
+```{r}
+ggplot(data, aes(y = Total.Costs)) +
+  geom_boxplot(fill = "yellow", color = "gray") +
+  labs(title = "Boxplot of Total Costs", y = "Total Costs") +
+  theme(axis.text.y = element_text(size = 10, face = "bold"),
+        axis.title = element_text(size = 12),
+        plot.title = element_text(size = 14, face = "bold"))
+```
+
+```{r}
+# Multivariate Analysis
+
+## Correlation matrix for numerical data (Ratio/Interval)
+num_data <- data %>%
+  select(Total.Costs, Total.Income, Net.Income, Net.Patient.Revenue)  # Choosing numerical columns
+cor_matrix <- cor(num_data, use = "complete.obs")
+
+# Plot the correlation matrix with rotated labels
+corrplot(cor_matrix, method = "circle", type = "upper", tl.cex = 0.8, tl.srt = 45,  # Rotate labels by 45 degrees
+         title = "Correlation Matrix of Selected Numerical Variables")
+
+```
+```{r}
+# Convert the 'Fiscal Year Begin Date' and 'Fiscal Year End Date' to Date objects
+data$Fiscal.Year.Begin.Date <- as.Date(data$Fiscal.Year.Begin.Date, format = "%Y-%m-%d")
+data$Fiscal.Year.End.Date <- as.Date(data$Fiscal.Year.End.Date, format = "%Y-%m-%d")
+
+# Plot to show the relationship between Number of Beds and Total Costs
+ggplot(data, aes(x = Number.of.Beds, y = Total.Costs)) +
+  geom_point(color = "steelblue", size = 3, alpha = 0.6) +  # Scatter plot with named color
+  geom_smooth(method = "lm", se = FALSE, color = "tomato", size = 1.2) +  # Linear trend line with named color
+  labs(
+    title = "Relationship between Number of Beds and Total Costs",
+    x = "Number of Beds",
+    y = "Total Costs"
+  ) +
+  # Customizing the theme for better aesthetics
+  theme(
+    plot.title = element_text(size = 18, face = "bold", hjust = 0.5, color = "midnightblue"),
+    axis.title.x = element_text(size = 14, face = "bold", color = "darkslategray"),
+    axis.title.y = element_text(size = 14, face = "bold", color = "darkslategray"),
+    axis.text.x = element_text(size = 12, color = "brown"),
+    axis.text.y = element_text(size = 12, color = "darkgreen"),
+    panel.grid.major = element_line(color = "black", size = 0.5),
+    panel.grid.minor = element_line(color = "lightgray", size = 0.25),
+    panel.background = element_rect(fill = "white"),
+    plot.background = element_rect(fill = "white")
+  )
+
+```
+
+```{r}
+## Scatterplot between "Total Costs" and "Total Income" (Ratio vs Ratio)
+ggplot(data, aes(x = Total.Costs, y = Total.Income)) +
+  geom_point(color = "orange", alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed") +
+  labs(title = "Total Costs vs Total Income", x = "Total Costs", y = "Total Income") +
+  theme(axis.text.x = element_text(size = 10, face = "bold"),
+        axis.text.y = element_text(size = 10, face = "bold"),
+        axis.title = element_text(size = 12),
+        plot.title = element_text(size = 14, face = "bold"))
+
+## Linear Regression: Predicting "Total Costs" using "Net Income" (Ratio vs Ratio)
+
+# Check for missing values and remove rows with NA in relevant columns
+data_clean <- data %>%
+  filter(!is.na(Total.Costs) & !is.na(Net.Income))
+
+# Print the cleaned data to check if it's correctly filtered
+print(head(data_clean))
+
+# Check if any data was left after filtering
+if (nrow(data_clean) > 0) {
+  # Fit the linear regression model
+  model <- lm(Total.Costs ~ Net.Income, data = data_clean)
+  summary(model)  # Display the regression summary
+} else {
+  print("No data available for regression analysis due to missing values.")
+}
+```
+
+
+
+
+
+
+1. 
+
+```{r}
+# Boxplot to show how different hospital types (CCN Facility Type) affect income and expenses
+library(ggplot2)
+
+# Income by Hospital Type
+ggplot(data, aes(x = CCN.Facility.Type, y = Total.Income, fill = CCN.Facility.Type)) +
+  geom_boxplot() +
+  labs(
+    title = "Income Distribution by Hospital Type",
+    x = "Hospital Type (CCN Facility Type)",
+    y = "Total Income"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "Set3")
+
+# Expenses by Hospital Type
+ggplot(data, aes(x = CCN.Facility.Type, y = Total.Costs, fill = CCN.Facility.Type)) +
+  geom_boxplot() +
+  labs(
+    title = "Expenses Distribution by Hospital Type",
+    x = "Hospital Type (CCN Facility Type)",
+    y = "Total Costs"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "Set3")
+
+
+```
+
+```{r}
+colnames(data)
+```
+
+2. 
+
+```{r}
+# Scatterplot for Number of Beds vs Total Discharges (patient volume)
+ggplot(data, aes(x = Number.of.Beds, y = Total.Discharges.Title.XVIII)) +
+  geom_point(color = "steelblue", alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE, color = "tomato") +
+  labs(
+    title = "Number of Beds vs Patient Volume (Discharges)",
+    x = "Number of Beds",
+    y = "Total Discharges (Patient Volume)"
+  ) +
+  theme_minimal(base_size = 14)
+
+# Scatterplot for Number of Beds vs Net Patient Revenue (impact on revenue)
+ggplot(data, aes(x = Number.of.Beds, y = Net.Patient.Revenue)) +
+  geom_point(color = "forestgreen", alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "Number of Beds vs Net Patient Revenue",
+    x = "Number of Beds",
+    y = "Net Patient Revenue"
+  ) +
+  theme_minimal(base_size = 14)
+
+
+```
+
+3. 
+
+```{r}
+# Scatterplot for Charity Care vs Net Income
+ggplot(data, aes(x = Cost.of.Charity.Care, y = Net.Income)) +
+  geom_point(color = "steelblue", alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "orange", linetype = "dashed") +
+  labs(
+    title = "Charity Care vs Net Income",
+    x = "Cost of Charity Care",
+    y = "Net Income"
+  ) +
+  theme_minimal(base_size = 14)
+
+```
+
+4. 
+
+```{r}
+# Boxplot for Total Costs by Hospital Type (Severity of Care)
+ggplot(data, aes(x = CCN.Facility.Type, y = Total.Costs, fill = CCN.Facility.Type)) +
+  geom_boxplot() +
+  labs(
+    title = "Operating Costs by Severity of Care (CCN Facility Type)",
+    x = "CCN Facility Type (Severity of Care)",
+    y = "Total Costs"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "Set2")
+
+# Boxplot for Patient Discharges (outcomes) by CCN Facility Type
+ggplot(data, aes(x = CCN.Facility.Type, y = Total.Discharges.Title.XVIII, fill = CCN.Facility.Type)) +
+  geom_boxplot() +
+  labs(
+    title = "Patient Outcomes (Discharges) by Severity of Care",
+    x = "CCN Facility Type (Severity of Care)",
+    y = "Total Discharges (Patient Outcomes)"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "Set2")
+
+```
+
